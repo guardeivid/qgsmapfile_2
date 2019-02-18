@@ -49,8 +49,6 @@ class StyleImport(object):
         self.max_label = False
         self.min_class = False
         self.min_label = False
-                              
-                              
         self.__getLabelProps()
 
         label = self.getLabel()
@@ -104,7 +102,6 @@ class StyleImport(object):
         Obtener tipo de etiqueta:
         (X) (Simple) si
           -Tiene el mismo numero de CLASS que LABEL y
-                                                                             
           -Tienen el mismo CLASS TEXT y
           -Tienen el mismo LABEL TEXT y
           -Tienen el mismo CLASS EXPRESSION y
@@ -138,7 +135,6 @@ class StyleImport(object):
 
         if self.labels:
             if self.num_labels == self.num_classes and \
-                                                                                           
                 self.text_class and self.text_label and self.exp_class and \
                 not self.exp_label and \
                 isSimpleLabelScale(self.labelmaxscaledenom, self.classmaxscale_, self.max_class, self.labelmaxscale_, self.max_label) and \
@@ -315,7 +311,6 @@ class StyleImport(object):
 
             for l in c.get("labels", []):
                 self.labels.append({"class": c, "label": l})
-
                 self.num_labels += 1
 
                 get_props(self.num_labels, l, self.text_label, self.text_label, "text", True, False)
@@ -327,10 +322,6 @@ class StyleImport(object):
 
                 if l.get("expression"):
                     self.exp_label = True
-                                          
-                                         
-                                          
-                                         
 
                 get_props(self.num_labels, l, self.labelmaxscale_, self.max_label, "maxscaledenom", -1, True)
                 get_props(self.num_labels, l, self.labelminscale_, self.min_label, "minscaledenom", -1, True)
@@ -363,13 +354,11 @@ class StyleImport(object):
                 exp = msobject['label'].get('expression', '')
                 if exp != '':
                     Expr = Expression(exp, self.has_labelitem)
-                                          
                     expressions.append(Expr.type())
                 else:
                     exp = msobject['class'].get('expression', '')
                     if exp != '':
                         Expr = Expression(exp, self.has_labelitem)
-                                              
                         expressions.append(Expr.type())
                     else:
                         expressions.append((Expression.TYPE_UNKNOWN, exp))
@@ -414,8 +403,6 @@ class StyleImport(object):
                 rule["rule"]["description"] = name
             if exp[0] != Expression.TYPE_UNKNOWN:
                 rule["rule"]["filter"] = Util.escape_xml(exp[1])
-                                             
-                                                               
             if self.labelmaxscaledenom != -1:
                 rule["rule"]["scalemaxdenom"] = self.labelmaxscaledenom
                 rule["rule"]["scalemindenom"] = 1 #valor por defecto de minima si tiene maxima

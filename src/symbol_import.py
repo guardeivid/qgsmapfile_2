@@ -3,7 +3,6 @@
 
 import os
 import mappyfile
-                              
 from qgis.core import (QgsSymbolV2, QgsMarkerSymbolV2, QgsLineSymbolV2, QgsFillSymbolV2, \
     QgsSimpleMarkerSymbolLayerV2, QgsMarkerLineSymbolLayerV2, QgsEllipseSymbolLayerV2, \
     QgsFontMarkerSymbolLayerV2, QgsSimpleLineSymbolLayerV2, QgsSimpleFillSymbolLayerV2, \
@@ -137,7 +136,6 @@ class SymbolImport(object):
                 self.__getMarkerDisplacementAndRotate(msstyle, gap, size, props_parent)
                 self.__getMsInitialGap(msstyle, gap, props_parent)
                 self.__getMsAnchorpoint(msSymbol, props)
-                                                       
                 qgsSubSymbol = self.__getQgsMarkerSubSymbol(type_marker, msSymbol, size, props)
                 self.deleteProperties(props_parent, _qgis.MARKER_LINE_SYMBOL_LAYER)
                 qgsSymbol = QgsMarkerLineSymbolLayerV2.create(props_parent)
