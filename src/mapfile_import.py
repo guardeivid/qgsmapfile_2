@@ -347,7 +347,7 @@ class MapfileImport(object):
                 srs = srs_metadata.split(" ")[0]
             else:
                 srs_projection = layer.get('projection', '')
-                if srs_projection and isinstance(srs_projection, str):
+                if srs_projection and isinstance(srs_projection, (str, unicode)):
                     match = _ms.REGEX_PROJECTION.search(srs_projection)
                     if match:
                         srs = match.group(1).upper()
@@ -473,7 +473,7 @@ class MapfileImport(object):
             _filteritem = layer.get('filteritem', '')
             if _filteritem:
                 #Si es string agregar comillas simples
-                if isinstance(_filter, str):
+                if isinstance(_filter, (str, unicode)):
                     _filter = "'{}'".format(_filter)
 
                 match_regexp = _ms.REGEX_REGEX.search(_filter)    #regexp
@@ -622,7 +622,7 @@ class MapfileImport(object):
             qgslayer = QgsVectorLayer(path, name, provider)
 
         if not qgslayer.isValid():
-            self.iface.messageBar().pushWarning(u'Error', u"El layer {} no es valido".format(name))
+            self.iface.messageBar().pushWarning(u'Error', u"La capa {} no es valida".format(name))
             return False
 
         self.setScaleBasedVisibility(mslayer, qgslayer)
@@ -641,7 +641,7 @@ class MapfileImport(object):
             addedlayer = QgsMapLayerRegistry.instance().addMapLayer(qgslayer)
 
         if not addedlayer:
-            self.iface.messageBar().pushWarning(u'Error', u"El layer {} no se pudo agregar al mapa".format(name))
+            self.iface.messageBar().pushWarning(u'Error', u"La capa {} no se pudo agregar al mapa".format(name))
             return False
 
         self.setCustomProperty(qgslayer, mslayer)

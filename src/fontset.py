@@ -32,19 +32,23 @@ class FontSet(object):
 
         self.props_new["fonts"] = self.getFontSet()
         self.props_old.update(self.props_new)
-        self.save()
+        self.save(self.props_old)
         return self.props_new["fonts"]
 
     def open(self):
         if not os.path.exists(self.file):
             self.save(PROPS)
             return {}
-        with open(self.file, 'rb') as f:
-            return pickle.load(f)
+        try:
+            with open(self.file, 'rb') as f:
+                return pickle.load(f)
+        except:
+            self.save(PROPS)
+            return {}
 
-    def save(self):
+    def save(self, props):
         with open(self.file, 'wb') as f:
-            pickle.dump(self.props_old, f, 2)
+            pickle.dump(props, f, 2)
 
     def getFontSet(self):
         f = {}

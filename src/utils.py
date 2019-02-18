@@ -502,9 +502,10 @@ class _qgis(object):
         if isinstance(mscolor, list):
             if n == 3:
                 color_ = QColor(mscolor[0], mscolor[1], mscolor[2], a)
-        elif isinstance(mscolor, str):
+        elif isinstance(mscolor, (str, unicode)):
             match = cls.REGEX_ATTR.search(mscolor)
             if mscolor[:1] == "#":
+                print("#", n)
                 r = int(mscolor[1:3], 16)
                 g = int(mscolor[3:5], 16)
                 b = int(mscolor[5:7], 16)
@@ -513,7 +514,9 @@ class _qgis(object):
                 elif n == 9:
                     a2 = int(mscolor[7:9], 16)
                     #unificar "a" con opacity y alpha del string
-                    a = int(round((a+a2)/2))
+                    #es el promedio, o % de la que ya tiene
+                    a = int(round((a + a2) / 2))
+                    #a = int(a2 * opacity * 1.0 / 100)
                     color_ = QColor(r, g, b, a)
             elif match:
                 #Color es definido por atributo

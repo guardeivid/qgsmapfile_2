@@ -3,7 +3,7 @@
 
 import os
 import mappyfile
-import matplotlib.font_manager
+                              
 from qgis.core import (QgsSymbolV2, QgsMarkerSymbolV2, QgsLineSymbolV2, QgsFillSymbolV2, \
     QgsSimpleMarkerSymbolLayerV2, QgsMarkerLineSymbolLayerV2, QgsEllipseSymbolLayerV2, \
     QgsFontMarkerSymbolLayerV2, QgsSimpleLineSymbolLayerV2, QgsSimpleFillSymbolLayerV2, \
@@ -43,7 +43,7 @@ class SymbolImport(object):
     def __getQgsSymbol(self, symbol):
         """docstring for __getMarkerSymbol"""
         new_symbol_layer = False
-        for msstyle in self.msclass["styles"][::-1]:
+        for msstyle in self.msclass["styles"]: #[::-1]
             symbol_layer = None
             if self.geom_type == QGis.Point:
                 symbol_layer = self.__getQgsMarkerSymbolLayer(msstyle)
@@ -95,7 +95,7 @@ class SymbolImport(object):
             (type_marker, symbolname, msSymbol, props) = self.__getMsSymbol(symbol, props)
 
         opacity = self.__getMsOpacity(msstyle)
-        self.__getMsColor(msstyle, props, opacity)
+        self.__getMsColor(msstyle, props, opacity, isline=True)
         self.__getMsOutlinecolor(msstyle, props, opacity, isline=True)
         self.__getMsLinecap(msstyle, props)
         self.__getMsLinejoin(msstyle, props)
@@ -133,10 +133,11 @@ class SymbolImport(object):
                     qgsSymbol = QgsMarkerLineSymbolLayerV2.create(props_parent)
                 qgsSymbol.setSubSymbol(qgsSubSymbol)
             else:
-                self.__getMarkerDisplacementAndRotate(msstyle, gap, props_parent)
+                size = self.__getMsSize(msstyle, props)
+                self.__getMarkerDisplacementAndRotate(msstyle, gap, size, props_parent)
                 self.__getMsInitialGap(msstyle, gap, props_parent)
                 self.__getMsAnchorpoint(msSymbol, props)
-                size = self.__getMsSize(msstyle, props)
+                                                       
                 qgsSubSymbol = self.__getQgsMarkerSubSymbol(type_marker, msSymbol, size, props)
                 self.deleteProperties(props_parent, _qgis.MARKER_LINE_SYMBOL_LAYER)
                 qgsSymbol = QgsMarkerLineSymbolLayerV2.create(props_parent)
@@ -180,7 +181,7 @@ class SymbolImport(object):
             self.__getMsAngle(msstyle, props, props_parent)
             gap = self.__getMsGap(msstyle)
             size = self.__getMsSize(msstyle, props)
-            self.__getMarkerDisplacementAndRotate(msstyle, gap, props_parent)
+            self.__getMarkerDisplacementAndRotate(msstyle, gap, size, props_parent)
 
             geomtransform = msstyle.get('geomtransform', '').lower()
             if geomtransform == 'centroid':
@@ -237,7 +238,7 @@ class SymbolImport(object):
         """docstring for __getMsSymbol"""
         #SYMBOL [integer|string|filename|url|attribute]
         type_marker = _ms.MS_SYMBOL_SIMPLE
-        props['name'] = 'circle'
+        props['name'] = u'circle'
         msSymbol = None
         #buscar si es un marcador conocido
         if symbolname in _qgis.MARKERS_WELL_KNOWN:
@@ -263,7 +264,7 @@ class SymbolImport(object):
                     type_marker = _ms.MS_SYMBOL_SVG
             elif match_attr:
                 #atributo
-                props['name_dd_active'] = '1'
+                props['name_dd_active'] = u'1'
                 props['name_dd_field'] = match_attr.group(1)
             else:
                 #QgsMarkerLineSymbolLayerV2 o QgsArrowSymbolLayer
@@ -370,21 +371,23 @@ class SymbolImport(object):
             opacity = 100
         return opacity
 
-    def __getMsColor(self, msstyle, props, opacity):
+    def __getMsColor(self, msstyle, props, opacity, isline=False):
         #COLOR [r] [g] [b] | [hexadecimal string] | [attribute]
         color = msstyle.get('color')
         if color:
             color_ = _qgis.color(color, opacity)
             if color_[1]:
-                props['color_dd_active'] = props['line_color_dd_active'] = '1'
+                props['color_dd_active'] = props['line_color_dd_active'] = u'1'
                 props['color_dd_field'] = props['line_color_dd_field'] = color_[0]
             else:
                 props['color'] = props['line_color'] = color_[0]
+            if isline:
+                props['outline_color'] = color_[0]
             #para flecha y lineas simples
-            props['style'] = props['line_style'] = 'solid'
+            props['style'] = props['line_style'] = u'solid'
         else:
             #para flecha y lineas simples
-            props['style'] = props['line_style'] = 'no'
+            props['style'] = props['line_style'] = u'no'
         return color
 
     def __getMsOutlinecolor(self, msstyle, props, opacity, isline=False):
@@ -396,17 +399,17 @@ class SymbolImport(object):
         if outlinecolor:
             outlinecolor_ = _qgis.color(outlinecolor, opacity)
             if outlinecolor_[1]:
-                props['outline_color_dd_active'] = '1'
+                props['outline_color_dd_active'] = u'1'
                 props['outline_color_dd_field'] = outlinecolor_[0]
             else:
                 props['outline_color'] = props['line_color'] = outlinecolor_[0]
-            props['outline_style'] = props['line_style'] = 'solid'
+            props['outline_style'] = props['line_style'] = u'solid'
 
         else:
-            props['outline_style'] = 'no'
+            props['outline_style'] = u'no'
             if isline:
-                if props['line_style'] != 'solid':
-                    props['line_style'] = 'no'
+                if props['line_style'] != u'solid':
+                    props['line_style'] = u'no'
 
     def __getMsLinecap(self, msstyle, props):
         #LINECAP [butt|round|square]
@@ -416,7 +419,7 @@ class SymbolImport(object):
         #LINEJOIN [round|miter|bevel|none]
         #qgis no soporta none
         linejoin = msstyle.get('linejoin', 'round').lower()
-        props['joinstyle'] = linejoin if linejoin != 'none' else 'bevel'
+        props['joinstyle'] = linejoin if linejoin != 'none' else u'bevel'
 
     def __getMsOffset(self, msstyle, props):
         #OFFSET [x][y] en SIZEUNITS, en gral pixels
@@ -465,7 +468,7 @@ class SymbolImport(object):
             else:
                 match = _qgis.REGEX_ATTR.search(size)
                 if match:
-                    props['size_dd_active'] = '1'
+                    props['size_dd_active'] = u'1'
                     props['size_dd_field'] = match.group(1)
         return size
 
@@ -503,11 +506,11 @@ class SymbolImport(object):
         angle = msstyle.get('angle', 0)
         if isinstance(angle, int):
             props['angle'] = str(angle)
-        elif isinstance(angle, str) and angle.lower() == 'auto':
+        elif isinstance(angle, (str, unicode)) and angle.lower() == 'auto':
             if isinstance(props_parent, dict):
-                props_parent['rotate'] = '1'
-        elif isinstance(angle, str) and angle.lower() != 'auto':
-            props['angle_dd_active'] = '1'
+                props_parent['rotate'] = u'1'
+        elif isinstance(angle, (str, unicode)) and angle.lower() != 'auto':
+            props['angle_dd_active'] = u'1'
             props['angle_dd_field'] = angle
 
     #TODO
@@ -522,7 +525,7 @@ class SymbolImport(object):
         #Para permitir patrones predeterminados deben tener valores estandarizados
         #Donde 1mm=0.25pixel, o usar unidad pixel por defecto para que sean numeros enteros
         pattern = msstyle.get('pattern')
-        props['use_custom_dash'] = '0'
+        props['use_custom_dash'] = u'0'
         if pattern:
             lpattern = ["{};{}".format(l[0], l[1]) for l in pattern]
             spattern = ";".join(lpattern)
@@ -532,12 +535,12 @@ class SymbolImport(object):
                 if spattern in _qgis.PATTERN_POLYGON:
                     props['line_style'] = props['outline_style'] = _qgis.PATTERN_POLYGON[spattern]
                 else:
-                    props['use_custom_dash'] = '1'
+                    props['use_custom_dash'] = u'1'
             else:
                 if spattern in _qgis.PATTERN_LINE:
                     props['line_style'] = props['outline_style'] = _qgis.PATTERN_LINE[spattern]
                 else:
-                    props['use_custom_dash'] = '1'
+                    props['use_custom_dash'] = u'1'
 
     def __getMsWidth(self, msstyle, props):
         #WIDTH [double|attribute]
@@ -546,21 +549,25 @@ class SymbolImport(object):
         props['line_width_unit'] = props['outline_width_unit'] = _ms.UNIT_MM
 
     #----------------------------------------------------------------------
-    def __getMarkerDisplacementAndRotate(self, msstyle, gap, props_parent):
-        props_parent['placement'] = 'interval'
+    def __getMarkerDisplacementAndRotate(self, msstyle, gap, size, props_parent):
+        props_parent['placement'] = u'interval'
         props_parent['interval_unit'] = _ms.UNIT_MM
+        props_parent['rotate'] = u'1'
         if gap > 0:
             props_parent['interval'] = str(_ms.getSize(gap, self.sizeunits))
-            props_parent['rotate'] = '0'
+            #props_parent['rotate'] = '0'
         elif gap < 0:
             props_parent['interval'] = str(_ms.getSize(abs(gap), self.sizeunits))
-            props_parent['rotate'] = '1'
+            #props_parent['rotate'] = '1'
         else:
-            props_parent['rotate'] = '0'
+            #props_parent['rotate'] = '0'
             #GEOMTRANSFORM [bbox|centroid|end|labelpnt|labelpoly|start|vertices|<expression>]
             geomtransform = msstyle.get('geomtransform', '').lower()
             if geomtransform in _qgis.GEOMTRANSFORM_LINE:
                 props_parent['placement'] = _qgis.GEOMTRANSFORM_LINE[geomtransform]
+            else:
+                size = size if isinstance(size, (int, float)) else 1.0
+                props_parent['interval'] = str(_ms.getSize(size, self.sizeunits))
 
     def __getQgsMarkerSubSymbol(self, type_marker, msSymbol, size, props, subsym=True):
         if type_marker == _ms.MS_SYMBOL_SIMPLE:

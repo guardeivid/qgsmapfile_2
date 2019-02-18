@@ -35,16 +35,22 @@ class StyleImport(object):
         self.has_labelitem = self.__hasLabelItem()
         self.labelminscaledenom = self.__getLabelMinScaledenom()
         self.labelmaxscaledenom = self.__getLabelMaxScaledenom()
+        self.classmaxscale_ = -1
+        self.classminscale_ = -1
+        self.labelminscale_ = -1
+        self.labelmaxscale_ = -1
         self.num_classes = 0
         self.num_labels = 0
         self.exp_class = True
         self.exp_label = False
+        self.text_class = True
+        self.text_label = True
         self.max_class = False
         self.max_label = False
         self.min_class = False
         self.min_label = False
-        self.text_class = True
-        self.text_label = True
+                              
+                              
         self.__getLabelProps()
 
         label = self.getLabel()
@@ -97,24 +103,46 @@ class StyleImport(object):
 
         Obtener tipo de etiqueta:
         (X) (Simple) si
-          -Tiene el mismo numero de CLASS que LABEL
-            o tiene un LABEL sin CLASS MAXSCALEDENOM ni CLASS MINSCALEDENOM y
+          -Tiene el mismo numero de CLASS que LABEL y
+                                                                             
           -Tienen el mismo CLASS TEXT y
           -Tienen el mismo LABEL TEXT y
           -Tienen el mismo CLASS EXPRESSION y
           -No tienen LABEL EXPRESSION y
-          -No tienen LABEL MAXSCALEDENOM y
-          -No tienen LABEL MINSCALEDENOM y
-          -No tienen LAYER LABELMAXSCALEDENOM y
-          -No tienen LAYER LABELMINSCALEDENOM
+          -No tienen LABEL MAXSCALEDENOM y ?
+          -No tienen LABEL MINSCALEDENOM y ?
+          -No tienen LAYER LABELMAXSCALEDENOM y ?
+          -No tienen LAYER LABELMINSCALEDENOM ?
+
+          -Puede tener 1 limite de escala para MAXSCALEDENOM y MINSCALEDENOM
+          -Si tiene 1 tiene que ser igual a LABELMAXSCALEDENOM y LABELMINSCALEDENOM
+          -Salvo que no tenga LABELMAXSCALEDENOM o LABELMINSCALEDENOM
         ( ) Sino (Rule-based)
         """
+        def isSimpleLabelScale(labelscaledenom, classscale, haveclassscale, labelscale, \
+            havelabelscale):
+            if havelabelscale:
+                if (not haveclassscale or classscale == labelscale) and \
+                (labelscaledenom == -1 or labelscaledenom == labelscale):
+                    return True
+                else:
+                    return False
+            elif haveclassscale:
+                if labelscaledenom == -1 or classscale == labelscale:
+                    return True
+                else:
+                    return False
+            else:
+                return True
+
+
         if self.labels:
-            if (self.num_labels == self.num_classes or \
-                (self.num_labels == 1 and not self.max_class and not self.min_class)) and \
+            if self.num_labels == self.num_classes and \
+                                                                                           
                 self.text_class and self.text_label and self.exp_class and \
-                not self.exp_label and not self.max_label and not self.min_label and \
-                self.labelmaxscaledenom == -1 and self.labelminscaledenom == -1:
+                not self.exp_label and \
+                isSimpleLabelScale(self.labelmaxscaledenom, self.classmaxscale_, self.max_class, self.labelmaxscale_, self.max_label) and \
+                isSimpleLabelScale(self.labelminscaledenom, self.classminscale_, self.min_class, self.labelminscale_, self.min_label):
                 #simple
                 return self.__getSingleLabel()
             else:
@@ -219,43 +247,113 @@ class StyleImport(object):
 
     def __getLabelProps(self):
         """docstring for __getLabelProps """
+        num_max = 0
+        num_min = 0
+
+        def get_props(num, obj, prop, prop2, key, value_default, value_error):
+            if num == 1:
+                prop = obj.get(key, value_default)
+            else:
+                if prop != obj.get(key, value_default):
+                    prop2 = value_error
+
+        """def getScaledenom(obj, scaledenom, num, labelscale, label):
+            scaledenom = obj.get(scaledenom)
+            if scaledenom:
+                if num == 0:
+                    labelscale = scaledenom
+                else:
+                    if labelscale != scaledenom:
+                        label = True
+                num += 1
+            return num"""
+
         for c in self.mslayer.get("classes", []):
             self.num_classes += 1
 
-            if self.num_classes == 1:
+            get_props(self.num_classes, c, self.text_class, self.text_class, "text", True, False)
+            """if self.num_classes == 1:
                 self.text_class = c.get("text", True)
             else:
                 if self.text_class != c.get("text", True):
-                    self.text_class = False
-
-            if self.num_classes == 1:
+                    self.text_class = False"""
+            get_props(self.num_classes, c, self.exp_class, self.exp_class, "expression", True, False)
+            """if self.num_classes == 1:
                 self.exp_class = c.get("expression", True)
             else:
                 if self.exp_class != c.get("expression", True):
-                    self.exp_class = False
+                    self.exp_class = False"""
+            get_props(self.num_classes, c, self.classmaxscale_, self.max_class, "maxscaledenom", -1, True)
+            get_props(self.num_classes, c, self.classminscale_, self.min_class, "minscaledenom", -1, True)
+            """if self.num_classes == 1:
+                self.classmaxscale_ = c.get("maxscaledenom", -1)
+            else:
+                if self.classmaxscale_ != c.get("maxscaledenom", -1):
+                    self.max_class = False"""
+
+            #num_max = getScaledenom(c, "maxscaledenom", num_max, \
+            #    self.labelmaxscale_, self.max_label)
+            """maxscaledenom = c.get("maxscaledenom")
+            if maxscaledenom:
+                if num_max == 0:
+                    self.labelmaxscale_ = maxscaledenom
+                else:
+                    if self.labelmaxscale_ != maxscaledenom:
+                        self.max_label = True
+                num_max += 1"""
+
+            #num_min = getScaledenom(c, "minscaledenom", num_min, \
+            #    self.labelminscale_, self.min_label)
+            """minscaledenom = c.get("minscaledenom")
+            if minscaledenom:
+                if num_min == 0:
+                    self.labelminscale_ = minscaledenom
+                else:
+                    if self.labelminscale_ != minscaledenom:
+                        self.min_label = True
+                num_min += 1"""
 
             for l in c.get("labels", []):
                 self.labels.append({"class": c, "label": l})
 
                 self.num_labels += 1
-                if self.num_labels == 1:
+
+                get_props(self.num_labels, l, self.text_label, self.text_label, "text", True, False)
+                """if self.num_labels == 1:
                     self.text_label = l.get("text", True)
                 else:
                     if self.text_label != l.get("text", True):
-                        self.text_label = False
+                        self.text_label = False"""
 
                 if l.get("expression"):
                     self.exp_label = True
-                if l.get("maxscaledenom"):
-                    self.max_label = True
-                if l.get("minscaledenom"):
-                    self.min_label = True
+                                          
+                                         
+                                          
+                                         
 
-            if self.num_labels == 1:
-                if c.get("maxscaledenom"):
-                    self.max_class = True
-                if c.get("minscaledenom"):
-                    self.min_class = True
+                get_props(self.num_labels, l, self.labelmaxscale_, self.max_label, "maxscaledenom", -1, True)
+                get_props(self.num_labels, l, self.labelminscale_, self.min_label, "minscaledenom", -1, True)
+                #num_max = getScaledenom(l, "maxscaledenom", num_max, \
+                #    self.labelmaxscale_, self.max_label)
+                """maxscaledenom = l.get("maxscaledenom")
+                if maxscaledenom:
+                    if num_max == 0:
+                        self.labelmaxscale_ = maxscaledenom
+                    else:
+                        if self.labelmaxscale_ != maxscaledenom:
+                            self.max_label = True
+                    num_max += 1"""
+                #num_min = getScaledenom(l, "minscaledenom", num_min, \
+                #    self.labelminscale_, self.min_label)
+                """minscaledenom = l.get("minscaledenom")
+                if minscaledenom:
+                    if num_min == 0:
+                        self.labelminscale_ = minscaledenom
+                    else:
+                        if self.labelminscale_ == minscaledenom:
+                            self.min_label = True
+                    num_min += 1"""
 
     def __getLabelExpressions(self):
         """docstring for __getLabelExpressions"""
@@ -265,14 +363,14 @@ class StyleImport(object):
                 exp = msobject['label'].get('expression', '')
                 if exp != '':
                     Expr = Expression(exp, self.has_labelitem)
-                    exp_type = Expr.type()
-                    expressions.append(exp_type)
+                                          
+                    expressions.append(Expr.type())
                 else:
                     exp = msobject['class'].get('expression', '')
                     if exp != '':
                         Expr = Expression(exp, self.has_labelitem)
-                        exp_type = Expr.type()
-                        expressions.append(exp_type)
+                                              
+                        expressions.append(Expr.type())
                     else:
                         expressions.append((Expression.TYPE_UNKNOWN, exp))
 
@@ -313,13 +411,16 @@ class StyleImport(object):
             name = msclass.get('name')
 
             if name:
-                rule["description"] = name
+                rule["rule"]["description"] = name
             if exp[0] != Expression.TYPE_UNKNOWN:
-                rule["filter"] = Util.escape_xml(exp[1])
-            if self.labelminscaledenom != -1:
-                rule["scalemaxdenom"] = self.labelminscaledenom
+                rule["rule"]["filter"] = Util.escape_xml(exp[1])
+                                             
+                                                               
             if self.labelmaxscaledenom != -1:
-                rule["scalemindenom"] = self.labelmaxscaledenom
+                rule["rule"]["scalemaxdenom"] = self.labelmaxscaledenom
+                rule["rule"]["scalemindenom"] = 1 #valor por defecto de minima si tiene maxima
+            if self.labelminscaledenom != -1:
+                rule["rule"]["scalemindenom"] = self.labelminscaledenom
 
             Label = LabelSettings(self.qgslayer, self.geom_type, self.has_labelitem, \
                 self.labelminscaledenom, self.labelmaxscaledenom, self.fontset, \
@@ -333,6 +434,7 @@ class StyleImport(object):
         #cargar qml a la capa
         self.qgslayer.loadNamedStyle(qml)
         #eliminar archivo tmp
+        #print(qml)
         os.remove(qml)
         #TODO q3 return, ya que seria QgsPalLayerSettings
 

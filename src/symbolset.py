@@ -37,9 +37,12 @@ class SymbolSet(object):
         if not os.path.exists(self.file) or os.path.getsize(self.file) == 0:
             self.save(PROPS)
             return {}
-
-        with open(self.file, 'rb') as f:
-            return pickle.load(f)
+        try:
+            with open(self.file, 'rb') as f:
+                return pickle.load(f)
+        except:
+            self.save(PROPS)
+            return {}
 
     def save(self, props):
         with open(self.file, 'wb') as f:

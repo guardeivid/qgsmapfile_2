@@ -163,10 +163,10 @@ class LabelSettings(object):
         """
         size = 9
         size_ = self.mslabel.get('size', 9)
-        print(size_)
+        #print(size_)
         if isinstance(size_, int):
             #ptsTomm = ( unit == Points ? 0.352778 : 1 )
-            size = size_ * _ms.PIXEL_MM * _ms.MM_PTS
+            size = size_ #* _ms.PIXEL_MM * _ms.MM_PTS #1.075 #
         else:
             match_attr = _qgis.REGEX_ATTR.search(size_)
             if match_attr:
@@ -216,7 +216,7 @@ class LabelSettings(object):
         # "labeling/shapeDraw"=true-false, "labeling/shapeType"=0
         background = False
         backshadow = False
-        backpadding = 1 #Mapserver usa 1 pixel
+        backpadding = 0
         msstyles = self.mslabel.get('styles', [])
         back = []
         for msstyle in msstyles:
@@ -250,13 +250,14 @@ class LabelSettings(object):
 
             if backpadding > 1:
                 if n > 2:
-                    backshadow = back[n-3] # o back[0]?
+                    backshadow = self.__isShadow(back[n-3]) # o back[0]?
             else:
-                backshadow = background2                
+                backshadow = self.__isShadow(background2)
 
             if backshadow:
                 self.__setSetting("shadowDraw", self.TRUE, _qgis.SHADOW)
 
+        print(backpadding)
         return (background, backshadow, backpadding)
 
     def __getBackPadding(self, msback):
@@ -268,6 +269,10 @@ class LabelSettings(object):
         if width > 1 and outlinecolor and color and outlinecolor == color:
             return width
         return None
+
+    def __isShadow(self, msback):
+        #determinar si tiene OFFSET
+        return msback if msback.get("offset") else None
 
     #TODO
     def __getMsBufferLabel(self):
@@ -425,11 +430,11 @@ class LabelSettings(object):
         minscaledenom = self.mslabel.get('minscaledenom')
         if minscaledenom:
             self.__setSetting("scaleVisibility", self.TRUE, _qgis.RENDERING)
-            self.__setSetting("scaleMin", minscaledenom, _qgis.RENDERING)
+            self.__setSetting("scaleMax", minscaledenom, _qgis.RENDERING)
         else:
             if self.labelmaxscaledenom > 0:
                 self.__setSetting("scaleVisibility", self.TRUE, _qgis.RENDERING)
-                self.__setSetting("scaleMin", self.labelmaxscaledenom, _qgis.RENDERING)
+                self.__setSetting("scaleMax", self.labelmaxscaledenom, _qgis.RENDERING)
         #TODO self.labelmaxscaledenom ? self.labelminscaledenom ?
 
     def __getMsMaxScaleDenomLabel(self):
@@ -437,11 +442,11 @@ class LabelSettings(object):
         maxscaledenom = self.mslabel.get('maxscaledenom')
         if maxscaledenom:
             self.__setSetting("scaleVisibility", self.TRUE, _qgis.RENDERING)
-            self.__setSetting("scaleMax", maxscaledenom, _qgis.RENDERING)
+            self.__setSetting("scaleMin", maxscaledenom, _qgis.RENDERING)
         else:
             if self.labelminscaledenom > 0:
                 self.__setSetting("scaleVisibility", self.TRUE, _qgis.RENDERING)
-                self.__setSetting("scaleMax", self.labelminscaledenom, _qgis.RENDERING)
+                self.__setSetting("scaleMin", self.labelminscaledenom, _qgis.RENDERING)
         #TODO self.labelmaxscaledenom ? self.labelminscaledenom ?
 
     def __getMsMinSizeLabel(self):
